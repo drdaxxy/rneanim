@@ -30,10 +30,38 @@
 
         <script>
 
+            var config = {
+                targetModel: "c002_010",
+                targetAnim: "0001",
+                repeatOffset: 210*30,
+                introOffset: 0,
+                playbackSpeed: 1
+            };
+
+            function onModelLoad(name) {
+                return function(result) {
+                    if (name != config.targetModel) return;
+
+                    config.targetAnim = "0001";
+
+                    new RNEAnimLoader().load('models/' + name + '/' + config.targetAnim, onAnimLoad(name, config.targetAnim, result));
+                };
+            }
+
+            function onAnimLoad(modelName, animName, loadedModel) {
+                return function(result) {
+                    if (modelName != config.targetModel || animName != config.targetAnim) return;
+
+                    if (mesh) scene.remove(mesh);
+                    scene.add(loadedModel.model);
+                    mesh = loadedModel.model;
+                    player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset, config.introOffset);
+                }
+            }
+
             var camera, scene, renderer, controls;
-            var mesh;
-            var helper;
-            var mixer = null;
+            var mesh = null;
+            var player = null;
             var t = window.performance.now();
 
             init();
@@ -46,20 +74,7 @@
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0xa0a0a0);
 
-                var loader = new RNEModelLoader();
-                loader.load('models/c002_010/0000', function(result) {
-                    scene.add(result.model);
-
-                    skeletonHelper = new THREE.SkeletonHelper( result.model );
-                    //scene.add( skeletonHelper );
-
-                    mesh = result.model;                    
-
-                    var animLoader = new RNEAnimLoader();
-                    animLoader.load('models/c002_010/0031', function(animResult) {
-                        mixer = new RNEAnimPlayer(result.model, animResult, 210*30);
-                    });
-                });
+                new RNEModelLoader().load('models/c002_010/0000', onModelLoad('c002_010'));
 
                 //light = new THREE.HemisphereLight( 0xFFFFFF, 0xCCCCCC );
                 //light = new THREE.DirectionalLight(0xFFFFFF, 0.5);
@@ -102,7 +117,7 @@
                 var t2 = window.performance.now();
                 var dt = t2 - t;
                 t = t2;
-                if (mixer) mixer.update(1.25*dt);
+                if (player) player.update(config.playbackSpeed * dt);
                 requestAnimationFrame( animate );
                 renderer.render( scene, camera );
 
