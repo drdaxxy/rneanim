@@ -25,7 +25,7 @@ RNEAnimLoader.prototype = {
         var duration = reader.getFloat32(pos, true); pos += 4;
         // TODO check framerate
         var frametime = 30.0;
-        var secondsDuration = duration * frametime;
+        var msDuration = duration * frametime;
 
         var trackCount = reader.getUint32(pos, true); pos += 4;
         var tracksOffset = reader.getUint32(pos, true); pos += 4;
@@ -88,6 +88,6 @@ RNEAnimLoader.prototype = {
             tracks.push(track);
         }
 
-        return {tracks: tracks, duration: secondsDuration};
+        return {tracks: tracks, duration: msDuration};
     }
 };

@@ -20,7 +20,8 @@
         </style>
     </head>
     <body>
-
+        <link rel="stylesheet" type="text/css" href="dat.gui.css">
+        <script src="js/dat.gui.min.js"></script>
         <script src="js/three.js"></script>
         <script src="js/OrbitControls.js"></script>
         <script src="js/GXTLoader.js"></script>
@@ -30,10 +31,15 @@
 
         <script>
 
+            var defaults = {
+                repeatOffset: 210,
+                introOffset: 0
+            }
+
             var config = {
                 targetModel: "c002_010",
                 targetAnim: "0001",
-                repeatOffset: 210*30,
+                repeatOffset: 210,
                 introOffset: 0,
                 playbackSpeed: 1
             };
@@ -55,11 +61,21 @@
                     if (mesh) scene.remove(mesh);
                     scene.add(loadedModel.model);
                     mesh = loadedModel.model;
-                    player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset, config.introOffset);
+
+                    repeatController.min(0).max(result.duration / 30).step(1);
+                    repeatController.setValue(defaults.repeatOffset < result.duration / 30 ? defaults.repeatOffset : 0);
+                    introController.min(0).max(result.duration / 30).step(1);
+                    introController.setValue(defaults.introOffset < result.duration / 30 ? defaults.introOffset : 0);
+
+                    player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset * 30, config.introOffset * 30);
                 }
             }
 
             var camera, scene, renderer, controls;
+            
+            var gui = new dat.GUI();
+            var repeatController, introController;
+
             var mesh = null;
             var player = null;
             var t = window.performance.now();
@@ -68,6 +84,10 @@
             animate();
 
             function init() {
+
+                gui.add(config, 'playbackSpeed', 0.25, 4.0, 0.25);
+                repeatController = gui.add(config, 'repeatOffset');
+                introController = gui.add(config, 'introOffset');
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
 
@@ -117,7 +137,11 @@
                 var t2 = window.performance.now();
                 var dt = t2 - t;
                 t = t2;
-                if (player) player.update(config.playbackSpeed * dt);
+                if (player) {
+                    player.repeatOffset = config.repeatOffset * 30;
+                    player.introOffset = config.introOffset * 30;
+                    player.update(config.playbackSpeed * dt);
+                }
                 requestAnimationFrame( animate );
                 renderer.render( scene, camera );
 

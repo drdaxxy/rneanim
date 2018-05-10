@@ -13,7 +13,6 @@ Third-party dependencies are included. See `THIRDPARTY` for attribution.
 
 ### TODO
 
-- Actual browser interface
 - Face animations (likely morph targets)
 - Support more GXT types, fix DXT1
 - Accurate shading, apply remaining non-colormap textures
