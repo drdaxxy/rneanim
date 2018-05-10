@@ -54,7 +54,7 @@
                     config.targetAnim = "0001";
 
                     if (animController) gui.remove(animController);
-                    animController = gui.add(config, 'targetAnim', allModels[name]).onFinishChange(function(newValue) {
+                    animController = gui.add(config, 'targetAnim', allModels[name]).name("Animation").onFinishChange(function(newValue) {
                         config.targetAnim = newValue;
                         new RNEAnimLoader().load('models/' + name + '/' + newValue, onAnimLoad(name, newValue, result));
                     });
@@ -72,11 +72,8 @@
                     mesh = loadedModel.model;
 
                     if (repeatController) gui.remove(repeatController);
-                    repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1);
+                    repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1).name("Repeat from x frames");
                     repeatController.setValue(defaults.repeatOffset < result.duration / 30 ? defaults.repeatOffset : 0);
-                    if (introController) gui.remove(introController);
-                    introController = gui.add(config, 'introOffset').min(0).max(result.duration / 30).step(1);
-                    introController.setValue(defaults.introOffset < result.duration / 30 ? defaults.introOffset : 0);
 
                     player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset * 30, config.introOffset * 30);
                 }
@@ -85,7 +82,7 @@
             var camera, scene, renderer, controls;
             
             var gui = new dat.GUI();
-            var repeatController, introController, modelController, animController;
+            var repeatController, modelController, animController;
 
             var mesh = null;
             var player = null;
@@ -96,13 +93,16 @@
 
             function init() {
 
-                gui.add(config, 'playbackSpeed', 0.25, 4.0, 0.25);
-                modelController = gui.add(config, 'targetModel', Object.keys(allModels)).onFinishChange(function(newValue) {
+                gui.width = 300;
+
+                gui.add(config, 'playbackSpeed', 0.25, 4.0, 0.25).name("Playback speed");
+                modelController = gui.add(config, 'targetModel', Object.keys(allModels)).name("Model").onFinishChange(function(newValue) {
                     config.targetModel = newValue;
                     if (animController) gui.remove(animController);
                     animController = null;
                     new RNEModelLoader().load('models/' + newValue + '/0000', onModelLoad(newValue));
                 });
+                gui.add(window, 'resetCamera').name("Reset camera");
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
 
@@ -126,26 +126,28 @@
                 renderer.setSize( window.innerWidth, window.innerHeight );
                 document.body.appendChild( renderer.domElement );
 
-                //
-
-                var controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                resetCamera();
 
                 window.addEventListener( 'resize', onWindowResize, false );
-
-
-                camera.position.z = 12;
-                camera.position.y = 12;
-                camera.lookAt(new THREE.Vector3(0,10,0));
-
             }
 
             function onWindowResize() {
 
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
+                controls.update();
 
                 renderer.setSize( window.innerWidth, window.innerHeight );
 
+            }
+
+            function resetCamera() {
+                camera.position.x = 0;
+                camera.position.y = 12;
+                camera.position.z = 12;
+                controls.target = new THREE.Vector3(0,10,0);
+                controls.update();
             }
 
             function animate() {
