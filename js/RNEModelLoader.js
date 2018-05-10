@@ -40,7 +40,6 @@ RNEModelLoader.prototype = {
 
         pos = texturesOffset;
         for (var i = 0; i < textureCount; i++) {
-            console.log("Texture: " + i);
             var gxtSize = reader.getUint32(pos, true); pos += 4;
             var gxtBuffer = buffer.slice(pos, pos + gxtSize);
             var gxtLoader = new GXTLoader();
@@ -65,7 +64,6 @@ RNEModelLoader.prototype = {
             bonepar.unk5 = reader.getUint16(pos, true); pos += 2;
             bonepar.unk6 = reader.getUint16(pos, true); pos += 2;
             pos += 0x130;
-            if (i == 4) console.log(pos);
             pos += 0x40; // skip over the bindpose, its inverse follows, and we need that anyway
 
             var m00 = reader.getFloat32(pos, true); pos += 4;
