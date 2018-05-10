@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <!-- 
+        https://github.com/drdaxxy/rneanim
+
+        This project contains third-party code, see THIRDPARTY in this directory
+    -->
+
+    <head>
+        <title>Robotics;Notes Elite animation player</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                margin: 0px;
+                background-color: #000;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+
+        <script src="js/three.js"></script>
+        <script src="js/OrbitControls.js"></script>
+        <script src="js/GXTLoader.js"></script>
+        <script src="js/RNEModelLoader.js"></script>
+        <script src="js/RNEAnimLoader.js"></script>
+        <script src="js/RNEAnimPlayer.js"></script>
+
+        <script>
+
+            var camera, scene, renderer, controls;
+            var mesh;
+            var helper;
+            var mixer = null;
+            var t = window.performance.now();
+
+            init();
+            animate();
+
+            function init() {
+
+                camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xa0a0a0);
+
+                var loader = new RNEModelLoader();
+                loader.load('models/c002_010/0000', function(result) {
+                    scene.add(result.model);
+
+                    skeletonHelper = new THREE.SkeletonHelper( result.model );
+                    //scene.add( skeletonHelper );
+
+                    mesh = result.model;                    
+
+                    var animLoader = new RNEAnimLoader();
+                    animLoader.load('models/c002_010/0031', function(animResult) {
+                        mixer = new RNEAnimPlayer(result.model, animResult, 210*30);
+                    });
+                });
+
+                //light = new THREE.HemisphereLight( 0xFFFFFF, 0xCCCCCC );
+                //light = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+                light = new THREE.AmbientLight(0xE0E0E0);
+                scene.add(light);
+
+                var grid = new THREE.GridHelper( 100, 20, 0x000000, 0x000000 );
+                grid.material.opacity = 0.2;
+                grid.material.transparent = true;
+                scene.add( grid );
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                document.body.appendChild( renderer.domElement );
+
+                //
+
+                var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+                window.addEventListener( 'resize', onWindowResize, false );
+
+
+                camera.position.z = 12;
+                camera.position.y = 12;
+                camera.lookAt(new THREE.Vector3(0,10,0));
+
+            }
+
+            function onWindowResize() {
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            }
+
+            function animate() {
+                var t2 = window.performance.now();
+                var dt = t2 - t;
+                t = t2;
+                if (mixer) mixer.update(1.25*dt);
+                requestAnimationFrame( animate );
+                renderer.render( scene, camera );
+
+            }
+
+        </script>
+
+    </body>
+</html>
