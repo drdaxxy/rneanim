@@ -17,6 +17,15 @@
                 background-color: #000;
                 overflow: hidden;
             }
+
+            #progress {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                font-family: monospace;
+                font-size: 1.2em;
+                top: 2em;
+            }
         </style>
     </head>
     <body>
@@ -47,9 +56,15 @@
                 playbackSpeed: 1
             };
 
+            function onProgress(xhr) {
+                document.getElementById('progress').innerText = "Progress: " + (xhr.loaded / xhr.total * 100).toFixed(2) + "%";
+            }
+
             function onModelLoad(name) {
                 return function(result) {
                     if (name != config.targetModel) return;
+
+                    document.getElementById('progress').innerText = "";
 
                     config.targetAnim = "0001";
 
@@ -60,13 +75,15 @@
                             new RNEAnimLoader().load('models/' + name + '/' + newValue, onAnimLoad(name, newValue, result));
                         });
                         onAnimLoad(name, config.targetAnim, result)(animResult);
-                    });
+                    }, onProgress);
                 };
             }
 
             function onAnimLoad(modelName, animName, loadedModel) {
                 return function(result) {
                     if (modelName != config.targetModel || animName != config.targetAnim) return;
+
+                    document.getElementById('progress').innerText = "";
 
                     if (mesh) scene.remove(mesh);
                     scene.add(loadedModel.model);
@@ -102,7 +119,7 @@
                     if (animController) gui.remove(animController);
                     animController = null;
                     new RNEModelLoader().load('models/' + newValue + '/0000', onModelLoad(newValue));
-                });
+                }, onProgress);
                 gui.add(window, 'resetCamera').name("Reset camera");
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
@@ -166,6 +183,8 @@
             }
 
         </script>
+
+        <div id="progress"></div>
 
     </body>
 </html>
