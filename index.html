@@ -53,13 +53,14 @@
 
                     config.targetAnim = "0001";
 
-                    if (animController) gui.remove(animController);
-                    animController = gui.add(config, 'targetAnim', allModels[name]).name("Animation").onFinishChange(function(newValue) {
-                        config.targetAnim = newValue;
-                        new RNEAnimLoader().load('models/' + name + '/' + newValue, onAnimLoad(name, newValue, result));
+                    new RNEAnimLoader().load('models/' + name + '/' + config.targetAnim, function(animResult) {
+                        if (animController) gui.remove(animController);
+                        animController = gui.add(config, 'targetAnim', allModels[name]).name("Animation").onFinishChange(function(newValue) {
+                            config.targetAnim = newValue;
+                            new RNEAnimLoader().load('models/' + name + '/' + newValue, onAnimLoad(name, newValue, result));
+                        });
+                        onAnimLoad(name, config.targetAnim, result)(animResult);
                     });
-
-                    new RNEAnimLoader().load('models/' + name + '/' + config.targetAnim, onAnimLoad(name, config.targetAnim, result));
                 };
             }
 
