@@ -28,8 +28,11 @@
         <script src="js/RNEModelLoader.js"></script>
         <script src="js/RNEAnimLoader.js"></script>
         <script src="js/RNEAnimPlayer.js"></script>
+        <script src="js/allModels.js"></script>
 
         <script>
+
+            var first = true;
 
             var defaults = {
                 repeatOffset: 210,
@@ -50,6 +53,12 @@
 
                     config.targetAnim = "0001";
 
+                    if (animController) gui.remove(animController);
+                    animController = gui.add(config, 'targetAnim', allModels[name]).onFinishChange(function(newValue) {
+                        config.targetAnim = newValue;
+                        new RNEAnimLoader().load('models/' + name + '/' + newValue, onAnimLoad(name, newValue, result));
+                    });
+
                     new RNEAnimLoader().load('models/' + name + '/' + config.targetAnim, onAnimLoad(name, config.targetAnim, result));
                 };
             }
@@ -62,9 +71,11 @@
                     scene.add(loadedModel.model);
                     mesh = loadedModel.model;
 
-                    repeatController.min(0).max(result.duration / 30).step(1);
+                    if (repeatController) gui.remove(repeatController);
+                    repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1);
                     repeatController.setValue(defaults.repeatOffset < result.duration / 30 ? defaults.repeatOffset : 0);
-                    introController.min(0).max(result.duration / 30).step(1);
+                    if (introController) gui.remove(introController);
+                    introController = gui.add(config, 'introOffset').min(0).max(result.duration / 30).step(1);
                     introController.setValue(defaults.introOffset < result.duration / 30 ? defaults.introOffset : 0);
 
                     player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset * 30, config.introOffset * 30);
@@ -74,7 +85,7 @@
             var camera, scene, renderer, controls;
             
             var gui = new dat.GUI();
-            var repeatController, introController;
+            var repeatController, introController, modelController, animController;
 
             var mesh = null;
             var player = null;
@@ -86,8 +97,12 @@
             function init() {
 
                 gui.add(config, 'playbackSpeed', 0.25, 4.0, 0.25);
-                repeatController = gui.add(config, 'repeatOffset');
-                introController = gui.add(config, 'introOffset');
+                modelController = gui.add(config, 'targetModel', Object.keys(allModels)).onFinishChange(function(newValue) {
+                    config.targetModel = newValue;
+                    if (animController) gui.remove(animController);
+                    animController = null;
+                    new RNEModelLoader().load('models/' + newValue + '/0000', onModelLoad(newValue));
+                });
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
 
