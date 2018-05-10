@@ -1,9 +1,10 @@
-RNEAnimPlayer = function(mesh, clip, repeatOffset, introOffset)
+RNEAnimPlayer = function(mesh, clip, repeatOffset, introOffset, tweening)
 {
     this.mesh = mesh;
     this.clip = clip;
     this.repeatOffset = repeatOffset ? repeatOffset : 0;
     this.introOffset = introOffset ? introOffset : 0;
+    this.tweening = tweening !== undefined ? tweening : true;
 
     this.reset(this.introOffset);
 };
@@ -77,7 +78,7 @@ RNEAnimPlayer.prototype = {
         var nextIndex = typeIndexes[axis] + 1;
         var time = times[index];
         var value = values[index];
-        if (nextIndex < times.length) {
+        if (nextIndex < times.length && this.tweening) {
             var nextTime = times[nextIndex];
             var nextValue = values[nextIndex];
             var transitionDuration = nextTime - time;

@@ -53,7 +53,8 @@
                 targetAnim: "0001",
                 repeatOffset: 210,
                 introOffset: 0,
-                playbackSpeed: 1
+                playbackSpeed: 1,
+                tweening: true
             };
 
             function onProgress(xhr) {
@@ -121,6 +122,7 @@
                     new RNEModelLoader().load('models/' + newValue + '/0000', onModelLoad(newValue));
                 }, onProgress);
                 gui.add(window, 'resetCamera').name("Reset camera");
+                gui.add(config, 'tweening').name("Tweening");
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
 
@@ -173,6 +175,7 @@
                 var dt = t2 - t;
                 t = t2;
                 if (player) {
+                    player.tweening = config.tweening;
                     player.repeatOffset = config.repeatOffset * 30;
                     player.introOffset = config.introOffset * 30;
                     player.update(config.playbackSpeed * dt);
