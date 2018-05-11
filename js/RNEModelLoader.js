@@ -62,8 +62,8 @@ RNEModelLoader.prototype = {
             bonepar.unk3 = reader.getUint16(pos, true); pos += 2;
             bonepar.unk4 = reader.getUint16(pos, true); pos += 2;
             bonepar.unk5 = reader.getUint16(pos, true); pos += 2;
-            bonepar.unk6 = reader.getUint16(pos, true); pos += 2;
-            pos += 0x130;
+            bonepar.childrenCount = reader.getUint16(pos, true); pos += 2;
+            pos += 0x130; // children and bind position/rotation vectors
             pos += 0x40; // skip over the bindpose, its inverse follows, and we need that anyway
 
             var m00 = reader.getFloat32(pos, true); pos += 4;
