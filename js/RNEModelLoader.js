@@ -53,9 +53,11 @@ RNEModelLoader.prototype = {
         var bindMatrices = [];
 
         for (var i = 0; i < boneCount; i++) {
+            var bone = new THREE.Bone();
+
             pos = bonesOffset + (0x1D0 * i);
             var bonepar = {};
-            bonepar.id = reader.getUint16(pos, true); pos += 2;
+            bone.id = reader.getUint16(pos, true); pos += 2;
             bonepar.unk1 = reader.getUint16(pos, true); pos += 2;
             bonepar.parent = reader.getUint16(pos, true); pos += 2;
             bonepar.unk2 = reader.getUint16(pos, true); pos += 2;
@@ -63,7 +65,17 @@ RNEModelLoader.prototype = {
             bonepar.unk4 = reader.getUint16(pos, true); pos += 2;
             bonepar.unk5 = reader.getUint16(pos, true); pos += 2;
             bonepar.childrenCount = reader.getUint16(pos, true); pos += 2;
-            pos += 0x130; // children and bind position/rotation vectors
+            pos += 0x10C; // children
+
+            // for some reason, these seem to differ from what's provided in the bindpose matrices (or I'm dumb)
+            // so we need to apply these after building the skeleton, then recalculate inverses
+            // TODO understand this better, this probably isn't the right way to do it...
+            bone.userData.basePosition = new THREE.Vector3(reader.getFloat32(pos, true), reader.getFloat32(pos+4, true), reader.getFloat32(pos+8, true)); pos += 0xC;
+            bone.userData.baseRotation = new THREE.Euler(reader.getFloat32(pos, true), reader.getFloat32(pos+4, true), reader.getFloat32(pos+8, true), 'ZYX'); pos += 0xC;
+            var baseScale = new THREE.Vector3(reader.getFloat32(pos, true), reader.getFloat32(pos+4, true), reader.getFloat32(pos+8, true)); pos += 0xC;
+            if (baseScale.length() == 0) baseScale = new THREE.Vector3(1,1,1);
+            bone.userData.baseScale = baseScale;
+
             pos += 0x40; // skip over the bindpose, its inverse follows, and we need that anyway
 
             var m00 = reader.getFloat32(pos, true); pos += 4;
@@ -86,8 +98,6 @@ RNEModelLoader.prototype = {
             var m23 = reader.getFloat32(pos, true); pos += 4;
             var m33 = reader.getFloat32(pos, true); pos += 4;
 
-            var bone = new THREE.Bone();
-
             // IMPORTANT!
             // The animation format expects rotations to be applied in the order Z-Y-X
             // Also, we need to set this before setting the bone's transform
@@ -97,7 +107,6 @@ RNEModelLoader.prototype = {
             var boneMatrix = new THREE.Matrix4().set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
             bindMatrices.push(boneMatrix);
 
-            bone.name = bonepar.id;
             boneList.push(bone);
             if (bonepar.parent != 0xFFFF) {
                 if (tmpSkeleton[bonepar.parent] == null) tmpSkeleton[bonepar.parent] = [];

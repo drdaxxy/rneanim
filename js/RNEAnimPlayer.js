@@ -44,8 +44,14 @@ RNEAnimPlayer.prototype = {
             this.currentTime += repeatDelta;
         }
 
-        mesh.skeleton.pose();
-
+        // TODO figure out why I have to do this ;_;
+        for (var i = 0; i < this.mesh.skeleton.bones.length; i++) {
+            var bone = this.mesh.skeleton.bones[i];
+            if (bone.userData.basePosition) bone.position.copy(bone.userData.basePosition);
+            if (bone.userData.baseRotation) bone.rotation.copy(bone.userData.baseRotation);
+            if (bone.userData.baseScale) bone.scale.copy(bone.userData.baseScale);
+        }
+        
         for (var i = 0; i < this.clip.tracks.length; i++) {
             if (this.mesh.skeleton.bones.length <= this.clip.tracks[i].bone) continue;
 
