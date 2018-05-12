@@ -17,6 +17,5 @@ Third-party dependencies are included. See `THIRDPARTY` for attribution.
 - Support more GXT types, fix DXT1
   - Support all models
 - Accurate shading, apply remaining non-colormap textures
-  - Eye decals?
-
+  - ~~Eye decals?~~ Looks good except for Airi
 ![AkiDamaged](akidamaged.png?raw=true "AkiDamaged")

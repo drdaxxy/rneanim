@@ -207,6 +207,20 @@ RNEModelLoader.prototype = {
             if (colorMapId > -1) {
                 mesh.material.map = textures[colorMapId];
             }
+            if (secondMapId > -1) {
+                // colormap is a decal
+                // TODO airi
+                var frontMesh = new THREE.SkinnedMesh(mesh.geometry, mesh.material.clone());
+                for (j = 0; j < boneList.length; j++)
+                {
+                    if (boneList[j].parent == null) frontMesh.add(boneList[j]);
+                }
+                frontMesh.bind(skeleton);
+                mesh.polygonOffset = true;
+                mesh.polygonOffsetFactor = -1;
+                mesh.material.map = textures[secondMapId];
+                container.add(frontMesh);
+            }
 
 
             container.add(mesh);
