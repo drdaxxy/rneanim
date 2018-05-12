@@ -227,13 +227,16 @@ GXTLoader.prototype = {
                         }
                     }
 
-                    var outX = x + i;
-                    var outY = y + j;
+                    var outX = x;
+                    var outY = y;
                     if (isSwizzled) {
-                        var unswizzled = unswizzle(outX, outY, width, height);
-                        outX = unswizzled.x;
-                        outY = unswizzled.y;
+                        var unswizzled = unswizzle(x / 4, y / 4, width / 4, height / 4);
+                        outX = unswizzled.x * 4;
+                        outY = unswizzled.y * 4;
                     }
+
+                    outX += i;
+                    outY += j;
 
                     if (outX < width) {
                         imageData.data[(outX + width * outY) * 4 + 0] = finalColor.r;
@@ -361,9 +364,6 @@ GXTLoader.prototype = {
                     }
                 }
             } else if (baseFormat == SceGxmTextureBaseFormat.UBC1) {
-                // THIS IS BROKEN
-                // TODO FIX TILING
-
                 var blockCountX = Math.floor((canvas.width + 3) / 4);
                 var blockCountY = Math.floor((canvas.height + 3) / 4);
                 var blockWidth = (canvas.width < 4) ? canvas.width : 4;

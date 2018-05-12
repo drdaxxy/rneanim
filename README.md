@@ -14,7 +14,7 @@ Third-party dependencies are included. See `THIRDPARTY` for attribution.
 ### TODO
 
 - Face animations (likely morph targets)
-- Support more GXT types, fix DXT1
+- Support more GXT types
   - Support all models
 - Accurate shading, apply remaining non-colormap textures
   - ~~Eye decals?~~ Looks good except for Airi
