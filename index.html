@@ -89,6 +89,7 @@
                     if (mesh) scene.remove(mesh);
                     scene.add(loadedModel.model);
                     mesh = loadedModel.model;
+                    mesh.rotation.y = Math.PI/2;
 
                     if (repeatController) gui.remove(repeatController);
                     repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1).name("Repeat from x frames");
