@@ -1,3 +1,5 @@
+// TODO: Now that we're not rotating around world-Z, just use THREE's normal animation system
+
 RNEAnimLoader = function(manager) {
     this.manager = (manager !== undefined ? manager : THREE.DefaultLoadingManager);
 };
@@ -71,16 +73,12 @@ RNEAnimLoader.prototype = {
                 subTracks.push({times: times, values: values});
             }
 
-            // These need to be added in the right order
-            // (so that rotation.worldOut will be applied after scales and rotation.x/y and before translates)
-            // TODO don't depend on object iteration order for that
             if (subTracks[0].times.length) track.position.x = subTracks[0];
             if (subTracks[1].times.length) track.position.y = subTracks[1];
             if (subTracks[2].times.length) track.position.z = subTracks[2];
-            if (subTracks[3].times.length) track.rotation.yaw = subTracks[3];
-            if (subTracks[4].times.length) track.rotation.roll = subTracks[4];
-            // "worldOut" = world out-of-screen (+Z in our case)
-            if (subTracks[5].times.length) track.rotation.worldOut = subTracks[5];
+            if (subTracks[3].times.length) track.rotation.x = subTracks[3];
+            if (subTracks[4].times.length) track.rotation.y = subTracks[4];
+            if (subTracks[5].times.length) track.rotation.z = subTracks[5];
             if (subTracks[6].times.length) track.scale.x = subTracks[6];
             if (subTracks[7].times.length) track.scale.y = subTracks[7];
             if (subTracks[8].times.length) track.scale.z = subTracks[8];

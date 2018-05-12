@@ -22,9 +22,9 @@ RNEAnimPlayer.prototype = {
                     z: 0
                 },
                 rotation: {
-                    yaw: 0,
-                    roll: 0,
-                    worldOut: 0
+                    x: 0,
+                    y: 0,
+                    z: 0
                 },
                 scale: {
                     x: 0,
@@ -88,15 +88,8 @@ RNEAnimPlayer.prototype = {
                 value = this._lerpTween(this.currentTime - time, transitionDuration, value, nextValue);
             }
         }
-
-        if (type == "rotation") {
-            if (axis == "yaw") axis = "x";
-            if (axis == "roll") axis = "y";
-            if (axis == "worldOut") axis = "z";
-            bone[type][axis] = value;
-        } else {
-            bone[type][axis] = value;
-        }
+        
+        bone[type][axis] = value;
     },
 
     // TODO other easing functions?

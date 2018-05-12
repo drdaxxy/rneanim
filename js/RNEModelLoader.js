@@ -89,7 +89,7 @@ RNEModelLoader.prototype = {
             var bone = new THREE.Bone();
 
             // IMPORTANT!
-            // The animation format expects rotations to be applied in the order Y-Z-X
+            // The animation format expects rotations to be applied in the order Z-Y-X
             // Also, we need to set this before setting the bone's transform
             // (could probably just use .reorder() later too)
             bone.rotation.order = 'ZYX';
