@@ -150,9 +150,12 @@ RNEModelLoader.prototype = {
             }
 
             pos = beforeBoneMap + 0x70;
-            // TODO second pass
+            // TODO other passes
             var colorMapId = reader.getInt16(pos, true); pos += 2;
             var secondMapId = reader.getInt16(pos, true); pos += 2;
+            var thirdMapId = reader.getInt16(pos, true); pos += 2;
+            var fourthMapId = reader.getInt16(pos, true); pos += 2;
+            var specularMapId = reader.getInt16(pos, true); pos += 2;
 
             var vertices = [];
             var normals = [];
@@ -194,7 +197,7 @@ RNEModelLoader.prototype = {
             buffergeometry.addAttribute('skinIndex', new THREE.Uint16BufferAttribute(boneIndices, 4));
             buffergeometry.addAttribute('skinWeight', new THREE.Float32BufferAttribute(boneWeights, 4));
 
-            var mesh = new THREE.SkinnedMesh(buffergeometry, new THREE.MeshLambertMaterial({wireframe: false, skinning: true}));
+            var mesh = new THREE.SkinnedMesh(buffergeometry, new THREE.MeshToonMaterial({wireframe: false, skinning: true}));
             for (j = 0; j < boneList.length; j++)
             {
                 if (boneList[j].parent == null) mesh.add(boneList[j]);
@@ -206,6 +209,13 @@ RNEModelLoader.prototype = {
             mesh.material.transparent = true;
             if (colorMapId > -1) {
                 mesh.material.map = textures[colorMapId];
+            }
+            if (specularMapId > -1) {
+                mesh.material.shininess = 50;
+                mesh.material.specular = new THREE.Color(0xFFFFFF);
+                mesh.material.specularMap = textures[specularMapId];
+            } else {
+                mesh.material.shininess = 0;
             }
             if (secondMapId > -1) {
                 // colormap is a decal

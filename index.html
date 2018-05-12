@@ -99,7 +99,7 @@
             }
 
             var camera, scene, renderer, controls;
-            
+
             var gui = new dat.GUI();
             var repeatController, modelController, animController;
 
@@ -132,8 +132,15 @@
                 new RNEModelLoader().load('models/c002_010/0000', onModelLoad('c002_010'));
 
                 //light = new THREE.HemisphereLight( 0xFFFFFF, 0xCCCCCC );
+                light = new THREE.AmbientLight( 0xD0CCC4 );
+                scene.add(light);
                 //light = new THREE.DirectionalLight(0xFFFFFF, 0.5);
-                light = new THREE.AmbientLight(0xE0E0E0);
+                //light.position.z = -1;
+                //light.position.y = 2;
+                light = new THREE.SpotLight(0x606060, 0.5);
+                light.position.y = 18;
+                light.position.z = -2;
+                light.lookAt(0,10,0);
                 scene.add(light);
 
                 var grid = new THREE.GridHelper( 100, 20, 0x000000, 0x000000 );
