@@ -92,11 +92,8 @@ RNEAnimPlayer.prototype = {
         if (type == "rotation") {
             if (axis == "yaw") axis = "x";
             if (axis == "roll") axis = "y";
-            if (axis == "worldOut") {
-                bone.rotateOnWorldAxis(new THREE.Vector3(0,0,1), value);
-            } else {
-                bone[type][axis] = value;
-            }
+            if (axis == "worldOut") axis = "z";
+            bone[type][axis] = value;
         } else {
             bone[type][axis] = value;
         }
