@@ -18,6 +18,5 @@ Third-party dependencies are included. See `THIRDPARTY` for attribution.
   - Support all models
 - Accurate shading, apply remaining non-colormap textures
   - Eye decals?
-- Fix clipping (???)
 
 ![AkiDamaged](akidamaged.png?raw=true "AkiDamaged")
