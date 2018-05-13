@@ -153,9 +153,9 @@ RNEModelLoader.prototype = {
             // TODO other passes
             var colorMapId = reader.getInt16(pos, true); pos += 2;
             var secondMapId = reader.getInt16(pos, true); pos += 2;
-            var thirdMapId = reader.getInt16(pos, true); pos += 2;
-            var fourthMapId = reader.getInt16(pos, true); pos += 2;
             var specularMapId = reader.getInt16(pos, true); pos += 2;
+            var fourthMapId = reader.getInt16(pos, true); pos += 2;
+            var specularColorMapId = reader.getInt16(pos, true); pos += 2;
 
             var vertices = [];
             var normals = [];
@@ -211,11 +211,17 @@ RNEModelLoader.prototype = {
                 mesh.material.map = textures[colorMapId];
             }
             if (specularMapId > -1) {
-                mesh.material.shininess = 50;
+                mesh.material.shininess = 100;
                 mesh.material.specular = new THREE.Color(0xFFFFFF);
                 mesh.material.specularMap = textures[specularMapId];
             } else {
                 mesh.material.shininess = 0;
+            }
+            if (specularColorMapId > -1) {
+                // We hijack emissiveMap because I'm too lazy to add another texture properly
+                // see MonkeyPatchSpecularColorMap.js
+                mesh.material.emissive = new THREE.Color(0);
+                mesh.material.emissiveMap = textures[specularColorMapId];
             }
             if (secondMapId > -1) {
                 // colormap is a decal
