@@ -32,6 +32,7 @@
         <link rel="stylesheet" type="text/css" href="dat.gui.css">
         <script src="js/dat.gui.min.js"></script>
         <script src="js/three.js"></script>
+        <script src="js/OutlineEffect.js"></script>
         <script src="js/OrbitControls.js"></script>
         <script src="js/MonkeyPatchSpecularColorMap.js"></script>
         <script src="js/GXTLoader.js"></script>
@@ -99,7 +100,7 @@
                 }
             }
 
-            var camera, scene, renderer, controls;
+            var camera, scene, renderer, controls, effect;
 
             var gui = new dat.GUI();
             var repeatController, modelController, animController;
@@ -154,6 +155,13 @@
                 renderer.setSize( window.innerWidth, window.innerHeight );
                 document.body.appendChild( renderer.domElement );
 
+                // TODO accurate parameters, see also material params in RNEModelLoader
+                // TODO modify OutlineEffect to use Shader_Line.gxt? (colored perlin noise)
+                effect = new THREE.OutlineEffect(renderer, {
+                    defaultThickness: 0.003,
+                    defaultColor: new THREE.Color(0x6B4136)
+                });
+
                 controls = new THREE.OrbitControls(camera, renderer.domElement);
                 resetCamera();
 
@@ -189,7 +197,7 @@
                     player.update(config.playbackSpeed * dt);
                 }
                 requestAnimationFrame( animate );
-                renderer.render( scene, camera );
+                effect.render( scene, camera );
 
             }
 
