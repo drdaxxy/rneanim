@@ -208,7 +208,7 @@ RNEModelLoader.prototype = {
             mesh.material.side = THREE.DoubleSide;
             mesh.material.transparent = true;
             // TODO do we need to manually copy this for decals?
-            mesh.material.outlineParameters = { alpha: 0.2 };
+            mesh.material.outlineParameters = { alpha: 0.6 };
             if (colorMapId > -1) {
                 mesh.material.map = textures[colorMapId];
             }

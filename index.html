@@ -56,7 +56,8 @@
                 repeatOffset: 210,
                 introOffset: 0,
                 playbackSpeed: 1,
-                tweening: true
+                tweening: true,
+                background: true
             };
 
             function onProgress(xhr) {
@@ -100,7 +101,7 @@
                 }
             }
 
-            var camera, scene, renderer, controls, effect;
+            var camera, scene, renderer, controls, effect, ambientLight, bgTexture;
 
             var gui = new dat.GUI();
             var repeatController, modelController, animController;
@@ -128,14 +129,15 @@
 
                 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
 
+                bgTexture = new THREE.TextureLoader().load("flatbg.png");
                 scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xa0a0a0);
+                scene.background = bgTexture;
 
                 new RNEModelLoader().load('models/c002_010/0000', onModelLoad('c002_010'));
 
                 //light = new THREE.HemisphereLight( 0xFFFFFF, 0xCCCCCC );
-                light = new THREE.AmbientLight( 0xD0CCC4 );
-                scene.add(light);
+                ambientLight = new THREE.AmbientLight( 0xE0C098 );
+                scene.add(ambientLight);
                 //light = new THREE.DirectionalLight(0xFFFFFF, 0.5);
                 //light.position.z = -1;
                 //light.position.y = 2;
@@ -144,6 +146,16 @@
                 light.position.z = -2;
                 light.lookAt(0,10,0);
                 scene.add(light);
+
+                gui.add(config, 'background').name('Background').onFinishChange(function(newValue) {
+                    if (newValue) {
+                        scene.background = bgTexture;
+                        ambientLight.color = new THREE.Color(0xE0C098);
+                    } else {
+                        scene.background = new THREE.Color(0xA0A0A0);
+                        ambientLight.color = new THREE.Color(0xD0CCC4);
+                    }
+                });
 
                 var grid = new THREE.GridHelper( 100, 20, 0x000000, 0x000000 );
                 grid.material.opacity = 0.2;
@@ -157,8 +169,9 @@
 
                 // TODO accurate parameters, see also material params in RNEModelLoader
                 // TODO modify OutlineEffect to use Shader_Line.gxt? (colored perlin noise)
+                // TODO not render on things like aki's skirt (...model file data?)
                 effect = new THREE.OutlineEffect(renderer, {
-                    defaultThickness: 0.003,
+                    defaultThickness: 0.001,
                     defaultColor: new THREE.Color(0x6B4136)
                 });
 
