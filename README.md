@@ -13,9 +13,11 @@ Third-party dependencies are included. See `THIRDPARTY` for attribution.
 
 ### TODO
 
-- Face animations (likely morph targets)
 - Support more GXT types
   - Support all models
 - Accurate shading, apply remaining non-colormap textures
   - ~~Eye decals?~~ Looks good except for Airi
+  - Reflection sprites though
+- Fix tweening jitters
+
 ![AkiDamaged](akidamaged.png?raw=true "AkiDamaged")
