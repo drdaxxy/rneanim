@@ -97,7 +97,7 @@
                     repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1).name("Repeat from x frames");
                     repeatController.setValue(defaults.repeatOffset < result.duration / 30 ? defaults.repeatOffset : 0);
 
-                    player = new RNEAnimPlayer(loadedModel.model, result, config.repeatOffset * 30, config.introOffset * 30);
+                    player = new RNEAnimPlayer(loadedModel.model, loadedModel.meshGroups, result, config.repeatOffset * 30, config.introOffset * 30);
                 }
             }
 

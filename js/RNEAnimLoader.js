@@ -33,31 +33,39 @@ RNEAnimLoader.prototype = {
         var tracksOffset = reader.getUint32(pos, true); pos += 4;
 
         var bonesFound = {};
+        var meshGroupsFound = {};
 
-        var tracks = [];
+        var boneTracks = [];
+        var meshGroupTracks = [];
         for (i = 0; i < trackCount; i++) {
             pos = tracksOffset + i * 0xE8;
             trackStruct = pos;
 
             var track = {
+                visibility: {},
                 position: {},
                 rotation: {},
-                scale: {}
+                scale: {},
+                morphs: {} // TODO
             };
 
-            track.bone = reader.getUint16(pos, true); pos += 2;
+            track.id = reader.getUint16(pos, true); pos += 2;
             var flag = reader.getUint16(pos, true); pos += 2;
-            // TODO figure out what this flag is for
-            if (flag == 0x8000) continue;
-            if (bonesFound[track.bone] === true) continue;
-            bonesFound[track.bone] = true;
+            var isMeshGroup = flag == 0x8000;
+            if (isMeshGroup) {
+                if (meshGroupsFound[track.id] === true) continue;
+                meshGroupsFound[track.id] = true;
+            } else {
+                if (bonesFound[track.id] === true) continue;
+                bonesFound[track.id] = true;
+            }
 
             var subTracks = [];
 
-            pos += 4;
-            for (var j = 0; j < 9; j++) {
+            pos += 2;
+            for (var j = 0; j < 10; j++) {
                 var count = reader.getUint16(pos + 2*j, true);
-                var offset = reader.getUint32(trackStruct + 0x6C + 4*j, true);
+                var offset = reader.getUint32(trackStruct + 0x68 + 4*j, true);
                 var times = [];
                 var values = [];
                 if (count > 0) {
@@ -73,19 +81,24 @@ RNEAnimLoader.prototype = {
                 subTracks.push({times: times, values: values});
             }
 
-            if (subTracks[0].times.length) track.position.x = subTracks[0];
-            if (subTracks[1].times.length) track.position.y = subTracks[1];
-            if (subTracks[2].times.length) track.position.z = subTracks[2];
-            if (subTracks[3].times.length) track.rotation.x = subTracks[3];
-            if (subTracks[4].times.length) track.rotation.y = subTracks[4];
-            if (subTracks[5].times.length) track.rotation.z = subTracks[5];
-            if (subTracks[6].times.length) track.scale.x = subTracks[6];
-            if (subTracks[7].times.length) track.scale.y = subTracks[7];
-            if (subTracks[8].times.length) track.scale.z = subTracks[8];
+            if (subTracks[0].times.length) track.visibility = subTracks[0];
+            if (subTracks[1].times.length) track.position.x = subTracks[1];
+            if (subTracks[2].times.length) track.position.y = subTracks[2];
+            if (subTracks[3].times.length) track.position.z = subTracks[3];
+            if (subTracks[4].times.length) track.rotation.x = subTracks[4];
+            if (subTracks[5].times.length) track.rotation.y = subTracks[5];
+            if (subTracks[6].times.length) track.rotation.z = subTracks[6];
+            if (subTracks[7].times.length) track.scale.x = subTracks[7];
+            if (subTracks[8].times.length) track.scale.y = subTracks[8];
+            if (subTracks[9].times.length) track.scale.z = subTracks[9];
 
-            tracks.push(track);
+            if (isMeshGroup) {
+                meshGroupTracks.push(track);
+            } else {
+                boneTracks.push(track);
+            }
         }
 
-        return {tracks: tracks, duration: msDuration};
+        return {boneTracks: boneTracks, meshGroupTracks: meshGroupTracks, duration: msDuration};
     }
 };

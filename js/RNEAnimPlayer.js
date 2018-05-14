@@ -1,6 +1,7 @@
-RNEAnimPlayer = function(mesh, clip, repeatOffset, introOffset, tweening)
+RNEAnimPlayer = function(mesh, meshGroups, clip, repeatOffset, introOffset, tweening)
 {
     this.mesh = mesh;
+    this.meshGroups = meshGroups;
     this.clip = clip;
     this.repeatOffset = repeatOffset ? repeatOffset : 0;
     this.introOffset = introOffset ? introOffset : 0;
@@ -13,9 +14,10 @@ RNEAnimPlayer.prototype = {
     constructor: RNEAnimPlayer,
 
     reset: function(offset) {
-        this.trackIndexes = [];
-        for (var i = 0; i < this.clip.tracks.length; i++) {
-            this.trackIndexes.push({
+        this.boneTrackIndexes = [];
+        this.meshGroupTrackIndexes = [];
+        for (var i = 0; i < this.clip.boneTracks.length; i++) {
+            this.boneTrackIndexes.push({
                 position: {
                     x: 0,
                     y: 0,
@@ -33,6 +35,11 @@ RNEAnimPlayer.prototype = {
                 }
             });
         }
+        for (var i = 0; i < this.clip.meshGroupTracks.length; i++) {
+            this.meshGroupTrackIndexes.push({
+                visibility: 0
+            });
+        }
         this.currentTime = offset;
     },
 
@@ -44,6 +51,7 @@ RNEAnimPlayer.prototype = {
             this.currentTime += repeatDelta;
         }
 
+        // reset bones to default
         // TODO figure out why I have to do this ;_;
         for (var i = 0; i < this.mesh.skeleton.bones.length; i++) {
             var bone = this.mesh.skeleton.bones[i];
@@ -51,29 +59,58 @@ RNEAnimPlayer.prototype = {
             if (bone.userData.baseRotation) bone.rotation.copy(bone.userData.baseRotation);
             if (bone.userData.baseScale) bone.scale.copy(bone.userData.baseScale);
         }
+
+        // reset meshgroup params to default
+        for (var i in this.meshGroups) {
+            for (var j = 0; j < this.meshGroups[i].length; j++) {
+                this.meshGroups[i][j].visible = true;
+            }
+        }
         
-        for (var i = 0; i < this.clip.tracks.length; i++) {
-            if (this.mesh.skeleton.bones.length <= this.clip.tracks[i].bone) continue;
+        for (var i = 0; i < this.clip.boneTracks.length; i++) {
+            if (this.mesh.skeleton.bones.length <= this.clip.boneTracks[i].id) continue;
 
-            for (var axis in this.clip.tracks[i].scale) {
-                this._updateSubTrack(i, "scale", axis);
+            for (var axis in this.clip.boneTracks[i].scale) {
+                this._updateBoneSubTrack(i, "scale", axis);
             }
 
-            for (var axis in this.clip.tracks[i].rotation) {
-                this._updateSubTrack(i, "rotation", axis);
+            for (var axis in this.clip.boneTracks[i].rotation) {
+                this._updateBoneSubTrack(i, "rotation", axis);
             }
 
-            for (var axis in this.clip.tracks[i].position) {
-                this._updateSubTrack(i, "position", axis);
+            for (var axis in this.clip.boneTracks[i].position) {
+                this._updateBoneSubTrack(i, "position", axis);
+            }
+        }
+
+        for (var i = 0; i < this.clip.meshGroupTracks.length; i++) {
+            var track = this.clip.meshGroupTracks[i];
+            var meshGroup = this.meshGroups[track.id];
+            if (!Array.isArray(meshGroup)) continue;
+
+            var typeIndexes = this.meshGroupTrackIndexes[i];
+
+            if (Array.isArray(track.visibility.times)) {
+                var times = track.visibility.times;
+                var values = track.visibility.values;
+
+                while (typeIndexes.visibility+1 < times.length
+                    && this.currentTime >= times[typeIndexes.visibility+1]) {
+                    typeIndexes.visibility += 1;
+                }
+
+                for (var j = 0; j < meshGroup.length; j++) {
+                    meshGroup[j].visible = values[typeIndexes.visibility] > 0;
+                }
             }
         }
     },
 
-    _updateSubTrack: function(i, type, axis) {
-        var typeIndexes = this.trackIndexes[i][type];
-        var times = this.clip.tracks[i][type][axis].times;
-        var values = this.clip.tracks[i][type][axis].values;
-        var bone = this.mesh.skeleton.bones[this.clip.tracks[i].bone];
+    _updateBoneSubTrack: function(i, type, axis) {
+        var typeIndexes = this.boneTrackIndexes[i][type];
+        var times = this.clip.boneTracks[i][type][axis].times;
+        var values = this.clip.boneTracks[i][type][axis].values;
+        var bone = this.mesh.skeleton.bones[this.clip.boneTracks[i].id];
 
         while (typeIndexes[axis]+1 < times.length
             && this.currentTime >= times[typeIndexes[axis]+1]) {

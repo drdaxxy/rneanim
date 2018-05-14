@@ -24,6 +24,7 @@ RNEModelLoader.prototype = {
         var pos = 0;
 
         var container = new THREE.Group();
+        var meshGroups = {};
 
         pos = 9 * 4;
         var meshCount = reader.getUint32(pos, true); pos += 4;
@@ -250,6 +251,8 @@ RNEModelLoader.prototype = {
             mesh.updateMorphTargets();
 
 
+            if (meshGroups[meshInfo.groupId] == null) meshGroups[meshInfo.groupId] = [];
+
             // TODO turn backface culling on when we have outline color right
             // (outline works by drawing backfaces first, a little larger than front faces)
             mesh.material.side = THREE.DoubleSide;
@@ -293,10 +296,11 @@ RNEModelLoader.prototype = {
                 mesh.polygonOffset = true;
                 mesh.polygonOffsetFactor = -1;
                 mesh.material.map = textures[secondMapId];
+                meshGroups[meshInfo.groupId].push(mesh);
                 container.add(frontMesh);
             }
 
-
+            meshGroups[meshInfo.groupId].push(mesh);
             container.add(mesh);
         }
 
@@ -305,7 +309,8 @@ RNEModelLoader.prototype = {
         return {
             model: container,
             skeleton: skeleton,
-            boneList: boneList
+            boneList: boneList,
+            meshGroups: meshGroups
         };
     }
 };
