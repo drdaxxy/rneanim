@@ -29,12 +29,12 @@ RNEModelLoader.prototype = {
         var meshCount = reader.getUint32(pos, true); pos += 4;
         var boneCount = reader.getUint32(pos, true); pos += 4;
         var textureCount = reader.getUint32(pos, true); pos += 4;
+        var morphTargetCount = reader.getUint32(pos, true); pos += 4;
 
-        pos = 14 * 4;
+        var meshInfoOffset = reader.getUint32(pos, true); pos += 4;
         var bonesOffset = reader.getUint32(pos, true); pos += 4;
-
-        pos = 15 * 4;
         var texturesOffset = reader.getUint32(pos, true); pos += 4;
+        var morphTargetDataOffset = reader.getUint32(pos, true); pos += 4;
 
         var textures = [];
 
@@ -122,15 +122,19 @@ RNEModelLoader.prototype = {
         var skeleton = new THREE.Skeleton(boneList, bindMatrices);
         skeleton.pose();
 
-        pos = 13 * 4;
-        var meshInfoOffset = reader.getInt32(pos, true); pos += 4;
-
         for (var i = 0; i < meshCount; i++) {
             pos = meshInfoOffset + (0x18C * i);
             var meshInfo = {};
-            pos += 4;
+            meshInfo.groupId = reader.getUint32(pos, true); pos += 4;
             meshInfo.defaultParent = reader.getUint16(pos, true); pos += 2;
-            pos += 0xDA;
+            pos += 9;
+            meshInfo.morphTargetCount = reader.getUint8(pos); pos += 1;
+            meshInfo.morphTargetIds = [];
+            for (var j = 0; j < 80; j++) {
+                meshInfo.morphTargetIds.push(reader.getUint8(pos));
+                pos += 1;
+            }
+            pos += 0x80; // matrices of unknown use
             meshInfo.vertCount = reader.getInt32(pos, true); pos += 4;
             meshInfo.faceCount = reader.getInt32(pos, true); pos += 4;
             meshInfo.unk1 = reader.getInt32(pos, true); pos += 4;
@@ -141,21 +145,25 @@ RNEModelLoader.prototype = {
             meshInfo.vertStride = (meshInfo.faceOffset - meshInfo.vertOffset) / meshInfo.vertCount;
 
             meshInfo.boneMapCount = reader.getUint32(pos, true); pos += 4;
-            var beforeBoneMap = pos;
             var boneMap = [];
-            for (j = 0; j < meshInfo.boneMapCount; j++)
+            for (j = 0; j < 32; j++)
             {
                 boneMap.push(reader.getUint16(pos, true));
                 pos += 2;
             }
+            pos += 0x18; // floats of unknown use
+            meshInfo.opacity = reader.getFloat32(pos, true); pos += 4;
+            pos += 0x14; // floats of unknown use
 
-            pos = beforeBoneMap + 0x70;
             // TODO other passes
             var colorMapId = reader.getInt16(pos, true); pos += 2;
             var secondMapId = reader.getInt16(pos, true); pos += 2;
             var specularMapId = reader.getInt16(pos, true); pos += 2;
             var fourthMapId = reader.getInt16(pos, true); pos += 2;
             var specularColorMapId = reader.getInt16(pos, true); pos += 2;
+            var sixthMapId = reader.getInt16(pos, true); pos += 2;
+            pos += 4;
+            var outline = reader.getInt32(pos, true); pos += 4;
 
             var vertices = [];
             var normals = [];
@@ -205,10 +213,21 @@ RNEModelLoader.prototype = {
             mesh.bind(skeleton);
 
 
+            // TODO turn backface culling on when we have outline color right
+            // (outline works by drawing backfaces first, a little larger than front faces)
             mesh.material.side = THREE.DoubleSide;
             mesh.material.transparent = true;
+            // workaround for no OIT in THREE - https://github.com/mrdoob/three.js/issues/9977
+            mesh.material.depthWrite = meshInfo.opacity > 0.9;
+            mesh.material.opacity = meshInfo.opacity;
             // TODO do we need to manually copy this for decals?
-            mesh.material.outlineParameters = { alpha: 0.6 };
+            mesh.material.outlineParameters = {};
+            // TODO is this more than binary?
+            if (outline > 0) {
+                mesh.material.outlineParameters.alpha = 0.6;
+            } else {
+                mesh.material.outlineParameters.visible = false;
+            }
             if (colorMapId > -1) {
                 mesh.material.map = textures[colorMapId];
             }
