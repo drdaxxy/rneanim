@@ -46,7 +46,7 @@ RNEAnimLoader.prototype = {
                 position: {},
                 rotation: {},
                 scale: {},
-                morphs: {} // TODO
+                morphs: []
             };
 
             track.id = reader.getUint16(pos, true); pos += 2;
@@ -64,7 +64,7 @@ RNEAnimLoader.prototype = {
 
             pos += 2;
             for (var j = 0; j < 10; j++) {
-                var count = reader.getUint16(pos + 2*j, true);
+                var count = reader.getUint16(pos, true); pos += 2;
                 var offset = reader.getUint32(trackStruct + 0x68 + 4*j, true);
                 var times = [];
                 var values = [];
@@ -79,6 +79,29 @@ RNEAnimLoader.prototype = {
                     pos = trackPos;
                 }
                 subTracks.push({times: times, values: values});
+            }
+
+            pos += 12;
+            var morphCount = reader.getUint16(pos, true); pos += 2;
+            for (var j = 0; j < morphCount; j++) {
+                var morph = {};
+                morph.id = reader.getUint16(pos, true); pos += 2;
+                var influenceCountPos = trackStruct + 0x48 + 2*j;
+                var influenceCount = reader.getUint16(influenceCountPos, true);
+                var influenceOffsetPos = trackStruct + 0xA8 + 4*j;
+                var influenceOffset = reader.getUint32(influenceOffsetPos, true);
+                if (influenceCount > 0) {
+                    var trackPos = pos;
+                    pos = influenceOffset + 0x30;
+                    morph.times = [];
+                    morph.values = [];
+                    for (var k = 0; k < influenceCount; k++) {
+                        morph.times.push(reader.getFloat32(pos, true) * frametime); pos += 4;
+                        morph.values.push(reader.getFloat32(pos, true) / 100.0); pos += 4;
+                    }
+                    pos = trackPos;
+                }
+                track.morphs.push(morph);
             }
 
             if (subTracks[0].times.length) track.visibility = subTracks[0];

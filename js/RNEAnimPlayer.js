@@ -37,7 +37,8 @@ RNEAnimPlayer.prototype = {
         }
         for (var i = 0; i < this.clip.meshGroupTracks.length; i++) {
             this.meshGroupTrackIndexes.push({
-                visibility: 0
+                visibility: 0,
+                morphs: new Array(16).fill(0)
             });
         }
         this.currentTime = offset;
@@ -64,6 +65,9 @@ RNEAnimPlayer.prototype = {
         for (var i in this.meshGroups) {
             for (var j = 0; j < this.meshGroups[i].length; j++) {
                 this.meshGroups[i][j].visible = true;
+                for (var k = 0; k < this.meshGroups[i][j].morphTargetInfluences.length; k++) {
+                    this.meshGroups[i][j].morphTargetInfluences[k] = 0;
+                }
             }
         }
         
@@ -101,6 +105,33 @@ RNEAnimPlayer.prototype = {
 
                 for (var j = 0; j < meshGroup.length; j++) {
                     meshGroup[j].visible = values[typeIndexes.visibility] > 0;
+                }
+            }
+
+            for (var j = 0; j < track.morphs.length; j++) {
+                var id = track.morphs[j].id;
+                var times = track.morphs[j].times;
+                var values = track.morphs[j].values;
+                if (times.length == 0) continue;
+
+                while (typeIndexes.morphs[j]+1 < times.length
+                    && this.currentTime >= times[typeIndexes.morphs[j]+1]) {
+                    typeIndexes.morphs[j] += 1;
+                }
+
+                var index = typeIndexes.morphs[j];
+                var nextIndex = typeIndexes.morphs[j] + 1;
+                var time = times[index];
+                var value = values[index];
+                if (nextIndex < times.length && this.tweening) {
+                    var nextTime = times[nextIndex];
+                    var nextValue = values[nextIndex];
+                    var transitionDuration = nextTime - time;
+                    value = this._lerpTween(this.currentTime - time, transitionDuration, value, nextValue);
+                }
+
+                for (var k = 0; k < meshGroup.length; k++) {
+                    meshGroup[k].morphTargetInfluences[id] = value;
                 }
             }
         }

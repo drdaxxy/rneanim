@@ -92,6 +92,7 @@
                     if (mesh) scene.remove(mesh);
                     scene.add(loadedModel.model);
                     mesh = loadedModel.model;
+                    meshGroups = loadedModel.meshGroups; // only for debug
 
                     if (repeatController) gui.remove(repeatController);
                     repeatController = gui.add(config, 'repeatOffset').min(0).max(result.duration / 30).step(1).name("Repeat from x frames");
@@ -101,7 +102,7 @@
                 }
             }
 
-            var camera, scene, renderer, controls, effect, ambientLight, bgTexture;
+            var camera, scene, renderer, controls, effect, ambientLight, bgTexture, meshGroups;
 
             var gui = new dat.GUI();
             var repeatController, modelController, animController;
