@@ -35,6 +35,7 @@ RNEModelLoader.prototype = {
         var bonesOffset = reader.getUint32(pos, true); pos += 4;
         var texturesOffset = reader.getUint32(pos, true); pos += 4;
         var morphTargetDataOffset = reader.getUint32(pos, true); pos += 4;
+        var morphTargetInfoOffset = reader.getUint32(pos, true); pos += 4;
 
         var textures = [];
 
@@ -44,7 +45,7 @@ RNEModelLoader.prototype = {
             var gxtBuffer = buffer.slice(pos, pos + gxtSize);
             var gxtLoader = new GXTLoader();
             var subtextures = gxtLoader.parse(gxtBuffer);
-            for (j = 0; j < subtextures.length; j++) textures.push(subtextures[j]);
+            for (var j = 0; j < subtextures.length; j++) textures.push(subtextures[j]);
             pos += gxtSize;
         }
 
@@ -122,6 +123,26 @@ RNEModelLoader.prototype = {
         var skeleton = new THREE.Skeleton(boneList, bindMatrices);
         skeleton.pose();
 
+        var morphTargets = [];
+        for (var i = 0; i < morphTargetCount; i++) {
+            pos = morphTargetInfoOffset + (0x10 * i);
+            var morphTarget = {};
+            morphTarget.idInSeries = reader.getUint32(pos, true); pos += 4;
+            morphTarget.vertices = [];
+            morphTarget.normals = [];
+            var vertCount = reader.getUint32(pos, true); pos += 4;
+            pos += 4;
+            var vertOffset = reader.getUint32(pos, true); pos += 4;
+
+            pos = morphTargetDataOffset + vertOffset;
+            for (var j = 0; j < vertCount; j++) {
+                morphTarget.vertices.push(reader.getFloat32(pos, true), reader.getFloat32(pos + 4, true), reader.getFloat32(pos + 8, true));
+                morphTarget.normals.push(reader.getFloat32(pos + 12, true), reader.getFloat32(pos + 16, true), reader.getFloat32(pos + 20, true));
+                pos += 24;
+            }
+            morphTargets.push(morphTarget);
+        }
+
         for (var i = 0; i < meshCount; i++) {
             pos = meshInfoOffset + (0x18C * i);
             var meshInfo = {};
@@ -146,7 +167,7 @@ RNEModelLoader.prototype = {
 
             meshInfo.boneMapCount = reader.getUint32(pos, true); pos += 4;
             var boneMap = [];
-            for (j = 0; j < 32; j++)
+            for (var j = 0; j < 32; j++)
             {
                 boneMap.push(reader.getUint16(pos, true));
                 pos += 2;
@@ -205,12 +226,28 @@ RNEModelLoader.prototype = {
             buffergeometry.addAttribute('skinIndex', new THREE.Uint16BufferAttribute(boneIndices, 4));
             buffergeometry.addAttribute('skinWeight', new THREE.Float32BufferAttribute(boneWeights, 4));
 
-            var mesh = new THREE.SkinnedMesh(buffergeometry, new THREE.MeshToonMaterial({wireframe: false, skinning: true}));
-            for (j = 0; j < boneList.length; j++)
+            var mesh = new THREE.SkinnedMesh(buffergeometry, new THREE.MeshToonMaterial({wireframe: false, skinning: true, morphTargets: true}));
+            for (var j = 0; j < boneList.length; j++)
             {
                 if (boneList[j].parent == null) mesh.add(boneList[j]);
             }
             mesh.bind(skeleton);
+
+            // TODO necessary?
+            buffergeometry.morphAttributes.position = [];
+            buffergeometry.morphAttributes.normal = [];
+            
+            for (var j = 0; j < meshInfo.morphTargetCount; j++) {
+                var rawMorphTarget = morphTargets[meshInfo.morphTargetIds[j]];
+                var positionAttribute = new THREE.Float32BufferAttribute(rawMorphTarget.vertices, 3);
+                positionAttribute.name = "morphTarget" + j;
+                var normalAttribute = new THREE.Float32BufferAttribute(rawMorphTarget.normals, 3);
+                normalAttribute.name = "morphTarget" + j;
+                buffergeometry.morphAttributes.position.push(positionAttribute);
+                buffergeometry.morphAttributes.normal.push(normalAttribute);
+            }
+
+            mesh.updateMorphTargets();
 
 
             // TODO turn backface culling on when we have outline color right
@@ -248,7 +285,7 @@ RNEModelLoader.prototype = {
                 // colormap is a decal
                 // TODO airi
                 var frontMesh = new THREE.SkinnedMesh(mesh.geometry, mesh.material.clone());
-                for (j = 0; j < boneList.length; j++)
+                for (var j = 0; j < boneList.length; j++)
                 {
                     if (boneList[j].parent == null) frontMesh.add(boneList[j]);
                 }
