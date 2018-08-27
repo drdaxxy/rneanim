@@ -34,7 +34,7 @@
         <script src="js/three.js"></script>
         <script src="js/OutlineEffect.js"></script>
         <script src="js/OrbitControls.js"></script>
-        <script src="js/MonkeyPatchSpecularColorMap.js"></script>
+        <script src="js/MonkeyPatchLightingModel.js"></script>
         <script src="js/GXTLoader.js"></script>
         <script src="js/RNEModelLoader.js"></script>
         <script src="js/RNEAnimLoader.js"></script>
@@ -136,25 +136,19 @@
 
                 new RNEModelLoader().load('models/c002_010/0000', onModelLoad('c002_010'));
 
-                //light = new THREE.HemisphereLight( 0xFFFFFF, 0xCCCCCC );
-                ambientLight = new THREE.AmbientLight( 0xE0C098 );
+                ambientLight = new THREE.AmbientLight(0xC8AB99);
                 scene.add(ambientLight);
-                //light = new THREE.DirectionalLight(0xFFFFFF, 0.5);
-                //light.position.z = -1;
-                //light.position.y = 2;
-                light = new THREE.SpotLight(0x606060, 0.5);
-                light.position.y = 18;
-                light.position.z = -2;
-                light.lookAt(0,10,0);
+                light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+                light.position.set(1,1,1);
                 scene.add(light);
 
                 gui.add(config, 'background').name('Background').onFinishChange(function(newValue) {
                     if (newValue) {
                         scene.background = bgTexture;
-                        ambientLight.color = new THREE.Color(0xE0C098);
+                        ambientLight.color = new THREE.Color(0xC8AB99);
                     } else {
                         scene.background = new THREE.Color(0xA0A0A0);
-                        ambientLight.color = new THREE.Color(0xD0CCC4);
+                        ambientLight.color = new THREE.Color(0xC0C0C0);
                     }
                 });
 
@@ -173,7 +167,7 @@
                 // TODO not render on things like aki's skirt (...model file data?)
                 effect = new THREE.OutlineEffect(renderer, {
                     defaultThickness: 0.001,
-                    defaultColor: new THREE.Color(0x6B4136)
+                    defaultColor: new THREE.Color(0.4648, 0.2773, 0.2227)
                 });
 
                 controls = new THREE.OrbitControls(camera, renderer.domElement);

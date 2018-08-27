@@ -272,15 +272,15 @@ RNEModelLoader.prototype = {
                 mesh.material.map = textures[colorMapId];
             }
             if (specularMapId > -1) {
-                mesh.material.shininess = 100;
+                // not *exactly* a specular map
+                // - it's actually for rim lighting
+                // but that's pretty similar
                 mesh.material.specular = new THREE.Color(0xFFFFFF);
                 mesh.material.specularMap = textures[specularMapId];
-            } else {
-                mesh.material.shininess = 0;
             }
             if (specularColorMapId > -1) {
                 // We hijack emissiveMap because I'm too lazy to add another texture properly
-                // see MonkeyPatchSpecularColorMap.js
+                // see MonkeyPatchLightingModel.js
                 mesh.material.emissive = new THREE.Color(0);
                 mesh.material.emissiveMap = textures[specularColorMapId];
             }
