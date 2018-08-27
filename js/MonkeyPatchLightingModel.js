@@ -1,5 +1,14 @@
 // This is evil but I'm lazy
 
+var extraUniformBinder = function (material) {
+    return function (shader) {
+        shader.uniforms.ambientWeight = { value: 0.9 };
+        shader.uniforms.darkMode = { value: false };
+
+        material.userData.toonShader = shader;
+    }
+};
+
 THREE.ShaderChunk.specularmap_fragment = THREE.ShaderChunk.specularmap_fragment.replace(
     `float specularStrength;`,
     `
@@ -33,32 +42,31 @@ struct BlinnPhongMaterial {
     float   specularShininess;
     float   specularStrength;
 };
+
+uniform float ambientWeight;
+uniform bool darkMode;
+
 void RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {
-    float FALLOFF_POWER = 0.8;
+    const float FALLOFF_POWER = 0.8;
     float maskParam = material.specularStrength;
-    float ambientalpha = 0.9; // TODO => uniform
 
     float scaledDiffDot = 0.5*dot(geometry.normal, directLight.direction) + 0.5;
 
     vec4 toonFalloffGradInput;
-    toonFalloffGradInput.x = scaledDiffDot;
-    toonFalloffGradInput.y = scaledDiffDot;
+    toonFalloffGradInput.xy = vec2(scaledDiffDot);
 
     float normDotEye = 1.0 - dot(geometry.normal, geometry.viewDir);
-    toonFalloffGradInput.z = scaledDiffDot * normDotEye;
-    toonFalloffGradInput.w = scaledDiffDot * normDotEye;
+    toonFalloffGradInput.zw = vec2(scaledDiffDot * normDotEye);
 
-    vec4 g_ToonFalloffGradVals = vec4(0.546875, 0.421875, 0.468750, 0.281250);
-    vec4 g_ToonFalloffGradScale = vec4(10.66667, 10.66667, 32.0, 32.0);
+    const vec4 g_ToonFalloffGradVals = vec4(0.546875, 0.421875, 0.468750, 0.281250);
+    const vec4 g_ToonFalloffGradScale = vec4(10.66667, 10.66667, 32.0, 32.0);
 
-    vec4 g_ToonFalloffGradDarkVals = vec4(0.59375, 0.484375, 0.609375, 0.453125);
-    vec4 g_ToonFalloffGradDarkMax = vec4(0.79, 0.79, 0.61, 0.61);
+    const vec4 g_ToonFalloffGradDarkVals = vec4(0.59375, 0.484375, 0.609375, 0.453125);
+    const vec4 g_ToonFalloffGradDarkMax = vec4(0.79, 0.79, 0.61, 0.61);
 
-    #if 1 // TODO => uniform
-        vec4 toonFalloffGradParam = saturate((toonFalloffGradInput - g_ToonFalloffGradVals) * g_ToonFalloffGradScale);
-    #else
-        vec4 toonFalloffGradParam = step(g_ToonFalloffGradDarkVals, toonFalloffGradInput) * g_ToonFalloffGradDarkMax;
-    #endif
+    vec4 toonFalloffGradParam = 
+        darkMode ? step(g_ToonFalloffGradDarkVals, toonFalloffGradInput) * g_ToonFalloffGradDarkMax
+                 : saturate((toonFalloffGradInput - g_ToonFalloffGradVals) * g_ToonFalloffGradScale);
 
     vec2 toonFalloffInterpParam = toonFalloffGradParam.xz + maskParam * (toonFalloffGradParam.yw - toonFalloffGradParam.xz);
 
@@ -66,7 +74,7 @@ void RE_Direct_BlinnPhong( const in IncidentLight directLight, const in Geometri
     vec3 toonColor = shadowColor + toonFalloffInterpParam.x*(material.diffuseColor - shadowColor);
 
     vec3 baseAmbientColor = toonColor * ambientLightColor;
-    toonColor = toonColor + ambientalpha*(baseAmbientColor - toonColor);
+    toonColor = toonColor + ambientWeight * (baseAmbientColor - toonColor);
 
     vec3 falloffColor = FALLOFF_POWER * toonFalloffInterpParam.y * material.diffuseColor;
     toonColor += falloffColor * (1.0 - toonColor);

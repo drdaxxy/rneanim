@@ -204,6 +204,7 @@
                     player.introOffset = config.introOffset * 30;
                     player.update(config.playbackSpeed * dt);
                 }
+                // TODO: update all materials' ambientWeight/darkMode and put them in GUI
                 requestAnimationFrame( animate );
                 effect.render( scene, camera );
 

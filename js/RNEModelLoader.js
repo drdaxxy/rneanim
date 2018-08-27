@@ -253,6 +253,8 @@ RNEModelLoader.prototype = {
 
             if (meshGroups[meshInfo.groupId] == null) meshGroups[meshInfo.groupId] = [];
 
+            // Enable setting nonstandard lighting params
+            mesh.material.onBeforeCompile = extraUniformBinder(mesh.material);
             // TODO turn backface culling on when we have outline color right
             // (outline works by drawing backfaces first, a little larger than front faces)
             mesh.material.side = THREE.DoubleSide;
@@ -293,6 +295,7 @@ RNEModelLoader.prototype = {
                     if (boneList[j].parent == null) frontMesh.add(boneList[j]);
                 }
                 frontMesh.bind(skeleton);
+                frontMesh.material.onBeforeCompile = extraUniformBinder(frontMesh.material);
                 mesh.polygonOffset = true;
                 mesh.polygonOffsetFactor = -1;
                 mesh.material.map = textures[secondMapId];
